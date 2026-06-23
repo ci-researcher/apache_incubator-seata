@@ -17,8 +17,7 @@
 name: "Publish OSSRH"
 
 on:
-  push:
-    branches: [ disable ]
+  workflow_dispatch:
     # branches: [ develop, 2.x, snapshot, "*.*.*" ]
 
 jobs:
@@ -28,16 +27,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      matrix:
+        java:
+          - 11
+          - 16
+          - 17
+          - 21
+          - 25
     steps:
       # step 1
       - name: "Checkout"
         uses: actions/checkout@v2.4.0
       # step 2
       - name: "Setup Java JDK"
-        uses: actions/setup-java@v3.12.0
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
-          java-version: 8
+          java-version: ${{ matrix.java }}
           server-id: oss_seata
           server-username: OSSRH_USERNAME # Environment variable name for the username for authentication to the Apache Maven repository. Default is $GITHUB_ACTOR
           server-password: OSSRH_PASSWORD # Environment variable name for password or token for authentication to the Apache Maven repository. Default is $GITHUB_TOKEN
@@ -52,5 +58,5 @@ jobs:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USER }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
+        run: |-
           ./mvnw -T 4C clean deploy -Prelease,release-by-github-actions -DskipTests -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
