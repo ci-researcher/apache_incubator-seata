@@ -1,0 +1,6 @@
+@@ -38,3 +38,3 @@
+ 
+     - name: Run Spotless Check
+-      run: ./mvnw spotless:check
++      run: ./mvnw spotless:check -Dspotless-maven-plugin.version=2.44.0 -Dmaven.compiler.release=17
+\ No newline at end of line

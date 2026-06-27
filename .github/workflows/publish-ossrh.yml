@@ -29,34 +29,40 @@ jobs:
       fail-fast: false
       matrix:
         java:
-          - 11
-          - 16
-          - 17
-          - 21
-          - 25
+        - 11
+        - 16
+        - 17
+        - 21
+        - 25
     steps:
       # step 1
-      - name: "Checkout"
-        uses: actions/checkout@v2.4.0
+    - name: "Checkout"
+      uses: actions/checkout@v2.4.0
       # step 2
-      - name: "Setup Java JDK"
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'zulu'
-          java-version: ${{ matrix.java }}
-          server-id: oss_seata
-          server-username: OSSRH_USERNAME # Environment variable name for the username for authentication to the Apache Maven repository. Default is $GITHUB_ACTOR
-          server-password: OSSRH_PASSWORD # Environment variable name for password or token for authentication to the Apache Maven repository. Default is $GITHUB_TOKEN
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE # Environment variable name for the GPG private key passphrase. Default is $GPG_PASSPHRASE
+    - name: "Setup Java JDK"
+      uses: actions/setup-java@v5
+      with:
+        distribution: 'zulu'
+        java-version: ${{ matrix.java }}
+        server-id: oss_seata
+        server-username: OSSRH_USERNAME   # Environment variable name for the username for authentication to the Apache Maven repository. Default is $GITHUB_ACTOR
+        server-password: OSSRH_PASSWORD   # Environment variable name for password or token for authentication to the Apache Maven repository. Default is $GITHUB_TOKEN
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+        gpg-passphrase: GPG_PASSPHRASE   # Environment variable name for the GPG private key passphrase. Default is $GPG_PASSPHRASE
       # step 3
-      - name: "Print maven version"
-        run: ./mvnw -version
+    - name: "Print maven version"
+      run: ./mvnw -version
       # step 4
-      - name: "Publish to OSSRH"
-        env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USER }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |-
-          ./mvnw -T 4C clean deploy -Prelease,release-by-github-actions -DskipTests -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+    - name: "Publish to OSSRH"
+      env:
+        OSSRH_USERNAME: ${{ secrets.OSSRH_USER }}
+        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      run: |-
+        ./mvnw -T 4C clean deploy -Prelease,release-by-github-actions -DskipTests -e -B \
+          -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn \
+          -Dmaven.compiler.release=${{ matrix.java }} \
+          -Dmaven.compiler.source=${{ matrix.java }} \
+          -Dmaven.compiler.target=${{ matrix.java }}
+env:
+  _JAVA_OPTIONS: --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED --add-opens java.base/java.math=ALL-UNNAMED --add-opens java.base/java.time=ALL-UNNAMED --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED

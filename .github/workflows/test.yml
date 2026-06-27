@@ -28,45 +28,45 @@ jobs:
       fail-fast: false
       matrix:
         java:
-          - 25
+        - 25
         os: [macos-14, windows-2022]
         springboot: [2.7.18         -D spring-framework-bom.version=5.3.31, 2.6.15         -D spring-framework-bom.version=5.3.27, 2.5.15         -D spring-framework-bom.version=5.3.27, 2.4.13         -D spring-framework-bom.version=5.3.13, 2.3.12.RELEASE -D spring-framework-bom.version=5.2.15.RELEASE]
     steps:
       # step 1
-      - name: "Checkout"
-        uses: actions/checkout@v3
+    - name: "Checkout"
+      uses: actions/checkout@v3
       # step 2
-      - name: "Use Python 3.x"
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.12'
+    - name: "Use Python 3.x"
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'
       # step 3
-      - name: "Set up Java JDK"
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'zulu'
-          java-version: ${{ matrix.java }}
+    - name: "Set up Java JDK"
+      uses: actions/setup-java@v5
+      with:
+        distribution: 'zulu'
+        java-version: ${{ matrix.java }}
       # step 4
       ## step 4.1: for Ubuntu and MacOS
-      - name: "Test with Maven on '${{ matrix.os }}' OS"
-        if: always()
-        run: |
-          if [[ "${{ matrix.os }}" =~ "macos" ]]; then
-             python3 -m ensurepip --upgrade;
-             python3 -m pip install --upgrade pip setuptools;
-             if ! python3 -c "import distutils" &>/dev/null; then
-                python3 -m pip install --upgrade setuptools
-             fi
-            ./mvnw -T 4C clean test -P args-for-client-test  -P arrch64 -Dspring-boot.version=${{ matrix.springboot }} -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
-          else
-            ./mvnw -T 4C clean test -P args-for-client-test -Dspring-boot.version=${{ matrix.springboot }} -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
-          fi
+    - name: "Test with Maven on '${{ matrix.os }}' OS"
+      if: ${{ ! startsWith(matrix.os, 'windows') }}
+      run: |
+        if [[ "${{ matrix.os }}" =~ "macos" ]]; then
+           python3 -m ensurepip --upgrade;
+           python3 -m pip install --upgrade pip setuptools;
+           if ! python3 -c "import distutils" &>/dev/null; then
+              python3 -m pip install --upgrade setuptools
+           fi
+          ./mvnw -T 4C clean test -P args-for-client-test  -P arrch64 -Dspring-boot.version=${{ matrix.springboot }} -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
+        else
+          ./mvnw -T 4C clean test -P args-for-client-test -Dspring-boot.version=${{ matrix.springboot }} -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
+        fi
       ## step 4.2: for Windows
-      - name: "Build with Maven on 'windows' OS (Skip tests)"
-        if: always()
-        run: | # Skip tests, because too many errors in unit-test.
-          ./mvnw.cmd -version;
-          ./mvnw.cmd clean install -P args-for-client-test -DskipTests -D spring-boot.version=${{ matrix.springboot }} -e -B -D org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
+    - name: "Build with Maven on 'windows' OS (Skip tests)"
+      if: ${{ startsWith(matrix.os, 'windows') }}
+      run: | # Skip tests, because too many errors in unit-test.
+        ./mvnw.cmd -version;
+        ./mvnw.cmd clean install -P args-for-client-test -DskipTests -D spring-boot.version=${{ matrix.springboot }} -e -B -D org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
 
   # job 2
   test-springboot3x:
@@ -81,37 +81,39 @@ jobs:
         springboot: [3.3.0  -D spring-framework-bom.version=6.1.18 -D mockito.version=5.11.0 -D junit-jupiter.version=5.10.2, 3.2.0  -D spring-framework-bom.version=6.1.1  -D mockito.version=5.7.0  -D junit-jupiter.version=5.10.1, 3.1.6  -D spring-framework-bom.version=6.0.14 -D mockito.version=5.3.1  -D junit-jupiter.version=5.9.3, 3.0.13 -D spring-framework-bom.version=6.0.14]
     steps:
       # step 1
-      - name: "Checkout"
-        uses: actions/checkout@v3
+    - name: "Checkout"
+      uses: actions/checkout@v3
       # step 2
-      - name: "Use Python 3.x"
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.12'
+    - name: "Use Python 3.x"
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'
       # step 3
-      - name: "Set up Java JDK"
-        uses: actions/setup-java@v3.12.0
-        with:
-          distribution: 'zulu'
-          java-version: ${{ matrix.java }}
+    - name: "Set up Java JDK"
+      uses: actions/setup-java@v3.12.0
+      with:
+        distribution: 'zulu'
+        java-version: ${{ matrix.java }}
       # step 4
       ## step 4.1: for Ubuntu and MacOS
-      - name: "Test with Maven on '${{ matrix.os }}' OS"
-        if: ${{ ! startsWith(matrix.os, 'windows') }}
-        run: |
-          if [[ "${{ matrix.os }}" =~ "macos" ]]; then
-             python3 -m ensurepip --upgrade;
-             python3 -m pip install --upgrade pip setuptools;
-             if ! python3 -c "import distutils" &>/dev/null; then
-                python3 -m pip install --upgrade setuptools
-             fi
-            ./mvnw -T 4C clean test -P args-for-client-test  -P arrch64 -Dspring-boot.version=${{ matrix.springboot }} -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
-          else
-            ./mvnw -T 4C clean test -P args-for-client-test -Dspring-boot.version=${{ matrix.springboot }} -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
-          fi
+    - name: "Test with Maven on '${{ matrix.os }}' OS"
+      if: ${{ ! startsWith(matrix.os, 'windows') }}
+      run: |
+        if [[ "${{ matrix.os }}" =~ "macos" ]]; then
+           python3 -m ensurepip --upgrade;
+           python3 -m pip install --upgrade pip setuptools;
+           if ! python3 -c "import distutils" &>/dev/null; then
+              python3 -m pip install --upgrade setuptools
+           fi
+          ./mvnw -T 4C clean test -P args-for-client-test  -P arrch64 -Dspring-boot.version=${{ matrix.springboot }} -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
+        else
+          ./mvnw -T 4C clean test -P args-for-client-test -Dspring-boot.version=${{ matrix.springboot }} -e -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
+        fi
       ## step 4.2: for Windows
-      - name: "Build with Maven on 'windows' OS (Skip tests)"
-        if: ${{ startsWith(matrix.os, 'windows') }}
-        run: | # Skip tests, because too many errors in unit-test.
-          ./mvnw.cmd -version;
-          ./mvnw.cmd clean install -P args-for-client-test -DskipTests -D spring-boot.version=${{ matrix.springboot }} -e -B -D org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
+    - name: "Build with Maven on 'windows' OS (Skip tests)"
+      if: ${{ startsWith(matrix.os, 'windows') }}
+      run: | # Skip tests, because too many errors in unit-test.
+        ./mvnw.cmd -version;
+        ./mvnw.cmd clean install -P args-for-client-test -DskipTests -D spring-boot.version=${{ matrix.springboot }} -e -B -D org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn;
+env:
+  _JAVA_OPTIONS: --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED --add-opens java.base/java.math=ALL-UNNAMED --add-opens java.base/java.time=ALL-UNNAMED --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
